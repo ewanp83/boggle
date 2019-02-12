@@ -1,5 +1,9 @@
+#!/usr/bin/env python
+import os
 from string import ascii_uppercase
 from random import choice
+
+SCRIPT_PATH = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 def make_grid(width, height):
     """
@@ -49,4 +53,65 @@ def all_grid_neighbours(grid):
         position_neighbours = neighbours_of_position(position)
         neighbours[position] = [p for p in position_neighbours if p in grid]
     return neighbours
+
+def path_to_word(grid, path):
+    """
+    Add all of the letters on the path to a string
+    """
+    return ''.join([grid[p] for p in path])
+    
+def search(grid, dictionary):
+    """
+    Search through the paths to locate words by matching strings to words in a dictionary
+    """
+    neighbours = all_grid_neighbours(grid)
+    paths = []
+    
+    def do_search(path):
+        word = path_to_word(grid, path)
+        if word in dictionary:
+            paths.append(path)
+        for next_pos in neighbours[path[-1]]:
+            if next_pos not in path:
+                do_search(path + [next_pos])
+    
+    for position in grid:
+        do_search([position])
         
+    words = []
+    for path in paths:
+        words.append(path_to_word(grid, path))
+    return set(words)
+
+def get_dictionary(dictionary_file):
+    """
+    Load Dictionary file
+    """
+    if not dictionary_file.startswith('/'):
+        # if not absolute, then make path relative to our location:
+        dictionary_file = os.path.join(SCRIPT_PATH, dictionary_file)
+
+    with open(dictionary_file) as f:
+        return [w.strip().upper() for w in f]
+
+def display_words(words):
+    for word in words:
+        print(word)
+    print("Found %s words" % len(words))
+    
+        
+def main():
+    """
+    This is the function that will run the whole project
+    """
+    grid = make_grid(2, 2)
+    """
+    Here you can change your grid from a 3x3 to a 2x2 to test run times
+    """
+    dictionary = get_dictionary("words.txt")
+    words = search(grid, dictionary)
+    display_words(words)
+
+if __name__ == "__main__":
+    # Code in here will only execution when the file is run directly    
+    main()
